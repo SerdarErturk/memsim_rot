@@ -166,34 +166,34 @@ function Settings() {
    * Tüm aktif hedefler aynı anda P2'ye geçer.
    * 2 saniye sonra tüm aktif hedefler aynı anda P1'e döner.
    */
-  const selamlama = async () => {
-    clearAllTimeouts();
+const selamlama = async () => {
+  clearAllTimeouts();
 
-    const deviceId = await getConnectedDeviceId();
-    if (!deviceId) return;
+  const deviceId = await getConnectedDeviceId();
+  if (!deviceId) return;
 
-    const activeTargets = getActiveTargets();
+  const activeTargets = getActiveTargets();
 
-    if (!activeTargets.length) {
-      showMessage({
-        message: 'Aktif hedef bulunamadı.',
-        type: 'warning',
-        position: 'top',
-        duration: 4000,
-      });
-      return;
-    }
+  if (!activeTargets.length) {
+    showMessage({
+      message: 'Aktif hedef bulunamadı.',
+      type: 'warning',
+      position: 'top',
+      duration: 4000,
+    });
+    return;
+  }
 
-    const count = activeTargets.length;
+  const count = activeTargets.length;
 
-    // 1. adım: hepsi aynı anda 2. pozisyona geçsin
-    await sendBulkPosition(1, count, 2, deviceId);
+  // 1. adım: hepsi aynı anda 1. pozisyona gelsin
+  await sendBulkPosition(1, count, 1, deviceId);
 
-    // 2. adım: 2 saniye sonra hepsi aynı anda 1. pozisyona geri dönsün
-    addTimeout(() => {
-      sendBulkPosition(1, count, 1, deviceId);
-    }, 2000);
-  };
+  // 2. adım: 2 saniye sonra hepsi tekrar 2. pozisyona dönsün
+  addTimeout(() => {
+    sendBulkPosition(1, count, 2, deviceId);
+  }, 2000);
+};
 
   /**
    * Restart komutu.

@@ -7,11 +7,11 @@
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
 
-@interface kumansim_mobileTests : XCTestCase
+@interface memsim_rotTests : XCTestCase
 
 @end
 
-@implementation kumansim_mobileTests
+@implementation memsim_rotTests
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL (^)(UIView *view))test
 {

@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "kumansim_mobile.app"
-               BlueprintName = "kumansim_mobile"
-               ReferencedContainer = "container:kumansim_mobile.xcodeproj">
+               BuildableName = "memsim_rot.app"
+               BlueprintName = "memsim_rot"
+               ReferencedContainer = "container:memsim_rot.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "kumansim_mobileTests.xctest"
-               BlueprintName = "kumansim_mobileTests"
-               ReferencedContainer = "container:kumansim_mobile.xcodeproj">
+               BuildableName = "memsim_rotTests.xctest"
+               BlueprintName = "memsim_rotTests"
+               ReferencedContainer = "container:memsim_rot.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "kumansim_mobile.app"
-            BlueprintName = "kumansim_mobile"
-            ReferencedContainer = "container:kumansim_mobile.xcodeproj">
+            BuildableName = "memsim_rot.app"
+            BlueprintName = "memsim_rot"
+            ReferencedContainer = "container:memsim_rot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "kumansim_mobile.app"
-            BlueprintName = "kumansim_mobile"
-            ReferencedContainer = "container:kumansim_mobile.xcodeproj">
+            BuildableName = "memsim_rot.app"
+            BlueprintName = "memsim_rot"
+            ReferencedContainer = "container:memsim_rot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

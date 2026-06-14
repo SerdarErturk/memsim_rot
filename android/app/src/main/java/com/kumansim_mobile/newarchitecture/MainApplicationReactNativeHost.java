@@ -1,4 +1,4 @@
-package com.kumansim_mobile.newarchitecture;
+package com.memsim_rot.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.kumansim_mobile.BuildConfig;
-import com.kumansim_mobile.newarchitecture.components.MainComponentsRegistry;
-import com.kumansim_mobile.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.memsim_rot.BuildConfig;
+import com.memsim_rot.newarchitecture.components.MainComponentsRegistry;
+import com.memsim_rot.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

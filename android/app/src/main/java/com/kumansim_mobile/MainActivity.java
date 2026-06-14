@@ -1,4 +1,4 @@
-package com.kumansim_mobile;
+package com.memsim_rot;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -12,7 +12,7 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "kumansim_mobile";
+    return "memsim_rot";
   }
 
   /**

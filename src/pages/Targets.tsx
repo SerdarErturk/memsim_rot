@@ -136,7 +136,7 @@ function Targets() {
   }
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM ' + L('header.targetsetting',locale)}></Header>
+      <Header header={'MEMSIMROT ' + L('header.targetsetting',locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

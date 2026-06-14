@@ -53,7 +53,7 @@ function LanguageSetting() {
    }
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM ' + L('header.selectlanguage',locale)}></Header>
+      <Header header={'MEMSIMROT ' + L('header.selectlanguage',locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

@@ -47,7 +47,7 @@ function Sensors() {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM '+L('header.settingsensor',locale)}></Header>
+      <Header header={'MEMSIMROT '+L('header.settingsensor',locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

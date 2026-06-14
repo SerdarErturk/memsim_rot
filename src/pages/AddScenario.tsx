@@ -720,7 +720,7 @@ function AddScenario(props: any) {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: '#E9EDEE' }}>
-      <Header header={'MEMSİM ' + L('header.scenario', locale)} />
+      <Header header={'MEMSIMROT ' + L('header.scenario', locale)} />
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: 'row' }}>

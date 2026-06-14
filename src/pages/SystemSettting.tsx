@@ -235,7 +235,7 @@ const selamlama = async () => {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: '#E9EDEE' }}>
-      <Header header={'MEMSİM ' + L('header.systemsetting', locale)} />
+      <Header header={'MEMSIMROT ' + L('header.systemsetting', locale)} />
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10) }}>

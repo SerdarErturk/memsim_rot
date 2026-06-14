@@ -171,7 +171,7 @@ function NewTarget() {
   return (
     <SafeAreaView  >
       <LoadingLayer ref={loadingLayer} />
-      <Header header={'MEMSİM ' + L('header.connectdevice', locale)} />
+      <Header header={'MEMSIMROT ' + L('header.connectdevice', locale)} />
       <View >
         <View style={{ flexDirection: "row" }}>
           <View center style={{}}>

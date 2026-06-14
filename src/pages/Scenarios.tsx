@@ -268,7 +268,7 @@ function Scenarios() {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: '#E9EDEE' }}>
-      <Header header={'MEMSİM ' + L('header.gamescrenario', locale)} />
+      <Header header={'MEMSIMROT ' + L('header.gamescrenario', locale)} />
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: 'row' }}>

@@ -42,7 +42,7 @@ function ShotTimeSetting() {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM '+L("header.timesetting",locale)}></Header>
+      <Header header={'MEMSIMROT '+L("header.timesetting",locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

@@ -43,7 +43,7 @@ function ScoreSetting() {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM ' +L('header.scoresetting',locale)}></Header>
+      <Header header={'MEMSIMROT ' +L('header.scoresetting',locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

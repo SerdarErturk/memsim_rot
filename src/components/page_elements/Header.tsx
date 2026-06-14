@@ -76,7 +76,7 @@ export const Header = (props: IHeaderProps) => {
 
                 </View>
                 <View center style={{ flex: 2 }}>
-                    <Text style={{ fontWeight: "bold", color: "black" }}> {props.header ? props.header : "MEMSİM"} </Text>
+                    <Text style={{ fontWeight: "bold", color: "black" }}> {props.header ? props.header : "MEMSIMROT"} </Text>
                 </View>
                 <View style={{ flex: 1, justifyContent: "flex-end", alignItems: "flex-end" }}>
                     <TouchableOpacity onPress={() => {

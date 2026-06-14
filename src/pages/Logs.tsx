@@ -74,7 +74,7 @@ function Logs() {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header='MEMSİM LOGLAR'></Header>
+      <Header header='MEMSIMROT LOGLAR'></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10), flexDirection: "row" }}>

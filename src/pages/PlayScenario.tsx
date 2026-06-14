@@ -789,7 +789,7 @@ function PlayScenario(props: any) {
 
   return (
     <SafeAreaView hideBack style={{ backgroundColor: '#E9EDEE' }}>
-      <Header header={'MEMSİM ' + L('header.game', locale)} />
+      <Header header={'MEMSIMROT ' + L('header.game', locale)} />
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10) }}>
@@ -974,16 +974,7 @@ function PlayScenario(props: any) {
 
               <View style={{ flex: 2, padding: wp(4) }}>
                 <View>
-                  <Text style={{ color: 'black' }}>
-                    {L('general.shotdetail', locale)}
-                  </Text>
-
-                  <FlatList
-                    data={resultList}
-                    numColumns={1}
-                    renderItem={renderResult}
-                    keyExtractor={(item: any) => item.id}
-                  />
+               
                 </View>
               </View>
             </View>

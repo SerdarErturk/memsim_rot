@@ -27,7 +27,7 @@ function Games() {
   }
   return (
     <SafeAreaView hideBack style={{ backgroundColor: "#E9EDEE" }} >
-      <Header header={'MEMSİM ' + L("header.games",locale)}></Header>
+      <Header header={'MEMSIMROT ' + L("header.games",locale)}></Header>
       <LoadingLayer ref={loadingLayer} />
 
       <View style={{ padding: wp(10) }}>

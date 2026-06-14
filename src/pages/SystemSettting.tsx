@@ -33,7 +33,9 @@ function Settings() {
     loadTargetList();
 
     return () => {
-      bleManagerEmitter.removeAllListeners('BleManagerDidUpdateValueForCharacteristic');
+      bleManagerEmitter.removeAllListeners(
+        'BleManagerDidUpdateValueForCharacteristic',
+      );
       clearAllTimeouts();
     };
   }, []);
@@ -58,7 +60,16 @@ function Settings() {
 
     const activeTargets = targets
       .filter((t: any) => t.status === Status.ACTIVE)
-      .sort((a: any, b: any) => a.id - b.id);
+      .sort((a: any, b: any) => {
+        const aNo = parseInt((a.field || '').replace('H', ''), 10);
+        const bNo = parseInt((b.field || '').replace('H', ''), 10);
+
+        if (isNaN(aNo) || isNaN(bNo)) {
+          return a.id - b.id;
+        }
+
+        return aNo - bNo;
+      });
 
     setTargetList(activeTargets);
   };
@@ -92,15 +103,23 @@ function Settings() {
 
   const writeMessage = async (message: string, deviceId: string) => {
     try {
-      console.log('Giden=>>> ' + message);
+      /**
+       * KRİTİK:
+       * BLE uzun mesajları bölebilir.
+       * Merkez ESP '\n' karakterini görünce mesajı tamamlandı kabul edecek.
+       */
+      const packet = message.endsWith('\n') ? message : message + '\n';
 
-      const data = stringToBytes(message);
+      // Logda \n görünsün diye JSON.stringify kullanıyoruz.
+      console.log('Giden=>>> ' + JSON.stringify(packet));
+
+      const data = stringToBytes(packet);
 
       await BleManager.write(
         deviceId,
         SERVICE_UUID,
         CHARACTERISTIC_UUID,
-        data
+        data,
       );
     } catch (error) {
       console.log('BLE write error:', error);
@@ -121,16 +140,25 @@ function Settings() {
   const getActiveTargets = () => {
     return targetList
       .filter((t: any) => t.status === Status.ACTIVE)
-      .sort((a: any, b: any) => a.id - b.id);
+      .sort((a: any, b: any) => {
+        const aNo = parseInt((a.field || '').replace('H', ''), 10);
+        const bNo = parseInt((b.field || '').replace('H', ''), 10);
+
+        if (isNaN(aNo) || isNaN(bNo)) {
+          return a.id - b.id;
+        }
+
+        return aNo - bNo;
+      });
   };
 
   /**
    * Bulk + GO komutu gönderir.
    *
    * position:
-   * 1 = Ön
-   * 2 = Dikey / yan
-   * 3 = Arka
+   * 1 = Ön / hedef
+   * 2 = Dikey / pasif
+   * 3 = Arka / rehine
    *
    * Örnek:
    * B;S001;R001;N020;D:22222222222222222222
@@ -140,7 +168,7 @@ function Settings() {
     startTargetNo: number,
     count: number,
     position: 1 | 2 | 3,
-    deviceId?: string
+    deviceId?: string,
   ) => {
     const dv = deviceId || (await getConnectedDeviceId());
     if (!dv) return;
@@ -163,41 +191,48 @@ function Settings() {
 
   /**
    * Selamlama:
-   * Tüm aktif hedefler aynı anda P2'ye geçer.
-   * 2 saniye sonra tüm aktif hedefler aynı anda P1'e döner.
+   * Açılışta node'lar zaten P2 pasif konumda kabul edilir.
+   * 1. Tüm hedefler P1'e gelir
+   * 2. Tüm hedefler P3'e gider
+   * 3. Tüm hedefler P2 pasif konuma döner
    */
-const selamlama = async () => {
-  clearAllTimeouts();
+  const selamlama = async () => {
+    clearAllTimeouts();
 
-  const deviceId = await getConnectedDeviceId();
-  if (!deviceId) return;
+    const deviceId = await getConnectedDeviceId();
+    if (!deviceId) return;
 
-  const activeTargets = getActiveTargets();
+    const activeTargets = getActiveTargets();
 
-  if (!activeTargets.length) {
-    showMessage({
-      message: 'Aktif hedef bulunamadı.',
-      type: 'warning',
-      position: 'top',
-      duration: 4000,
-    });
-    return;
-  }
+    if (!activeTargets.length) {
+      showMessage({
+        message: 'Aktif hedef bulunamadı.',
+        type: 'warning',
+        position: 'top',
+        duration: 4000,
+      });
+      return;
+    }
 
-  const count = activeTargets.length;
+    const count = activeTargets.length;
 
-  // 1. adım: hepsi aynı anda 1. pozisyona gelsin
-  await sendBulkPosition(1, count, 1, deviceId);
+    // 1. adım: hepsi aynı anda P1'e gelsin
+    await sendBulkPosition(1, count, 1, deviceId);
 
-  // 2. adım: 2 saniye sonra hepsi tekrar 2. pozisyona dönsün
-  addTimeout(() => {
-    sendBulkPosition(1, count, 2, deviceId);
-  }, 2000);
-};
+    // 2. adım: 2 saniye sonra hepsi P3'e gitsin
+    addTimeout(() => {
+      sendBulkPosition(1, count, 3, deviceId);
+    }, 2000);
+
+    // 3. adım: 4 saniye sonra hepsi P2 pasif konuma dönsün
+    addTimeout(() => {
+      sendBulkPosition(1, count, 2, deviceId);
+    }, 4000);
+  };
 
   /**
    * Restart komutu.
-   * Bunun çalışması için merkez ESP/node tarafında "restart" desteklenmeli.
+   * Merkez/node tarafında "restart" destekleniyorsa çalışır.
    */
   const restart = async () => {
     const deviceId = await getConnectedDeviceId();
@@ -207,8 +242,8 @@ const selamlama = async () => {
   };
 
   /**
-   * Hedefleri başlangıç pozisyonuna alır.
-   * Tüm aktif hedefler P1'e gider.
+   * Hedefleri pasif konuma alır.
+   * Tüm aktif hedefler P2'ye gider.
    */
   const close = async () => {
     clearAllTimeouts();
@@ -230,7 +265,8 @@ const selamlama = async () => {
 
     const count = activeTargets.length;
 
-    await sendBulkPosition(1, count, 1, deviceId);
+    // Tüm hedefleri P2 pasif konuma al
+    await sendBulkPosition(1, count, 2, deviceId);
   };
 
   return (

@@ -1,20 +1,12 @@
 /*
   Rotary Target Central / Terminal ESP
-  Based on previous BLE -> ESP -> LoRa bridge.
+  BLE -> Central ESP -> LoRa bridge
 
-  What this version does:
-  - Keeps existing LoRa pins and BLE UUIDs.
-  - BLE write messages are forwarded to LoRa.
-  - Serial input is forwarded to LoRa.
-  - Test mode can periodically send commands to node H001.
-  - Supports rotary target commands:
-      Direct: M;H001;P1 / M;H001;P2 / M;H001;P3
-      Bulk:   B;S001;R001;N001;D:1 then GO;S001
-
-  IMPORTANT:
-  Old light-target protocol used a leading '*'.
-  Rotary node protocol does NOT need '*'.
-  Therefore ADD_LEGACY_STAR_PREFIX is false by default.
+  Important:
+  - BLE messages can arrive fragmented.
+  - This version buffers BLE chunks until '\n'.
+  - Tablet must send every command with trailing '\n'.
+  - Complete BLE message is forwarded to LoRa once.
 */
 
 #include <Arduino.h>
@@ -41,18 +33,9 @@
 // PROTOCOL / TEST SETTINGS
 // =========================
 
-// false = send exactly M;..., B;..., GO;... for new rotary node.
-// true  = old light-target behavior, prepend '*'. Do NOT use true for rotary node unless node code strips '*'.
 const bool ADD_LEGACY_STAR_PREFIX = false;
-
-// true  = central periodically sends test commands to H001.
-// false = normal BLE/Serial bridge only.
 const bool CENTRAL_TEST_MODE = false;
 
-// Test mode selector:
-// 1 = direct move test: M;H001;P1 -> P2 -> P3
-// 2 = bulk + GO test for H001: B;Sxxx;R001;N001;D:x then GO;Sxxx
-// 3 = bulk 4-node sample: B;Sxxx;R001;N004;D:1231 then GO;Sxxx
 const int CENTRAL_TEST_TYPE = 2;
 
 const unsigned long TEST_INTERVAL_MS = 2000;
@@ -64,10 +47,17 @@ int testPositionIndex = 0;
 int testScenarioCounter = 1;
 unsigned long lastTestMs = 0;
 
-// When true, GO is repeated to reduce packet-loss risk in test mode.
 const bool REPEAT_GO_FOR_TEST = true;
 const int GO_REPEAT_COUNT = 3;
 const int GO_REPEAT_DELAY_MS = 60;
+
+// =========================
+// BLE FRAGMENT BUFFER
+// =========================
+// Tablet messages must end with '\n'.
+// Example: B;S001;R001;N020;D:11111111111111111111\n
+String bleRxBuffer = "";
+const int BLE_RX_BUFFER_MAX = 512;
 
 // LoRa receive flag
 volatile bool receivedFlag = false;
@@ -117,11 +107,46 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
+    bleRxBuffer = "";
     Serial.println("BLE client disconnected.");
   }
 };
 
 class MyCallbacks : public BLECharacteristicCallbacks {
+  void processBleChunk(String incoming) {
+    incoming.replace("\r", "");
+
+    if (incoming.length() == 0) {
+      return;
+    }
+
+    Serial.println("BLE chunk => " + incoming);
+
+    bleRxBuffer += incoming;
+
+    if (bleRxBuffer.length() > BLE_RX_BUFFER_MAX) {
+      Serial.println("BLE buffer overflow, clearing.");
+      bleRxBuffer = "";
+      return;
+    }
+
+    int newlineIndex = bleRxBuffer.indexOf('\n');
+
+    while (newlineIndex >= 0) {
+      String completeMessage = bleRxBuffer.substring(0, newlineIndex);
+      completeMessage.trim();
+
+      bleRxBuffer = bleRxBuffer.substring(newlineIndex + 1);
+
+      if (completeMessage.length() > 0) {
+        Serial.println("BLE complete => " + completeMessage);
+        sendData(completeMessage);
+      }
+
+      newlineIndex = bleRxBuffer.indexOf('\n');
+    }
+  }
+
   void onWrite(BLECharacteristic* pCharacteristic) {
     std::string value = pCharacteristic->getValue();
 
@@ -132,11 +157,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         incoming += value[i];
       }
 
-      incoming.trim();
-
-      Serial.println("BLE message => " + incoming);
-
-      sendData(incoming);
+      processBleChunk(incoming);
     }
   }
 
@@ -266,12 +287,6 @@ void readData() {
 
     Serial.println("LoRa RX => " + message);
 
-    // Forward node messages to BLE client if connected.
-    // New node sends examples:
-    // PZ;H001
-    // ACK;S001;H001
-    // DONE;S001;H001;P1
-    // HELLO;H001
     if (deviceConnected && message.length() > 0 && message != lastsend) {
       pCharacteristic->setValue(message.c_str());
       pCharacteristic->notify();
@@ -337,8 +352,6 @@ void runCentralTestMode() {
   }
 
   if (CENTRAL_TEST_TYPE == 1) {
-    // Direct movement test for H001.
-    // Node moves immediately after receiving this command.
     String cmd = "M;H" + pad3(TEST_TARGET_NO) + ";P" + String(pos);
 
     sendData(cmd);
@@ -347,8 +360,6 @@ void runCentralTestMode() {
   }
 
   if (CENTRAL_TEST_TYPE == 2) {
-    // Bulk + GO test for one node.
-    // Good for validating the final scenario protocol.
     String sid = scenarioId(testScenarioCounter++);
 
     if (testScenarioCounter > 999) {
@@ -380,9 +391,6 @@ void runCentralTestMode() {
   }
 
   if (CENTRAL_TEST_TYPE == 3) {
-    // 4-node demo sample.
-    // H001/H002/H003/H004 get different positions.
-    // With only H001 connected, H001 reads the first char and moves accordingly.
     String sid = scenarioId(testScenarioCounter++);
 
     if (testScenarioCounter > 999) {

@@ -13,11 +13,11 @@
   Position codes:
     0 = no movement
     1 = front / target faces player
-    2 = side / vertical profile
+    2 = side / vertical profile / passive
     3 = back / target back faces player
 
   Bulk command example:
-    B;S001;R001;N020;D:11111222223333300000;Cxx
+    B;S001;R001;N020;D:11111222223333300000
     GO;S001
 
   Direct command examples:
@@ -52,22 +52,16 @@ int kirmizi = 7;
 int mavi = 6;
 int yesil = 5;
 
-// Pin assignment for rotary target version
-// Request update:
-// - Do NOT use PZ1 for servo. PZ1 remains the single piezo input.
-// - Servo signal uses one of the old RGB pins. Since target light/RGB is not needed
-//   in this version, GREEN/GPIO5 is repurposed as servo PWM signal.
-// Old code: piezo1 = GPIO2, piezo2 = GPIO33, piezo3 = GPIO25.
+// Servo / Piezo pins
 const uint8_t servoPin = 5;   // old RGB GREEN pin / servo signal
 const uint8_t piezoPin = 2;   // PZ1 connector / single piezo input
 
-// This version does not use RGB light outputs, because one RGB pin is now servo.
 const bool USE_STATUS_RGB_LEDS = false;
 
-// Servo angles. Avoid exact 0/180 to prevent endpoint strain.
-const int SERVO_FRONT = 10;
-const int SERVO_SIDE  = 90;
-const int SERVO_BACK  = 170;
+// Servo angles
+const int SERVO_FRONT = 10;   // P1
+const int SERVO_SIDE  = 90;   // P2 / passive
+const int SERVO_BACK  = 170;  // P3
 
 // =========================
 // SERVO TEST MODE
@@ -91,14 +85,16 @@ unsigned long lastServoMoveMs = 0;
 unsigned long ignorePiezoAfterServoMs = 300;
 
 // Target identity
-const int DEFAULT_TARGET_NO = 1;
+const int DEFAULT_TARGET_NO = 2;
+
 // true: this demo node always boots as H001 and updates EEPROM accordingly.
 // false: target number is read from EEPROM/BLE as in the old system.
 const bool FORCE_TARGET_NO_ON_BOOT = true;
+
 int addr = 0;
-int targetNo = DEFAULT_TARGET_NO;       // 1-100
-String targetId = "";                  // e.g. H002
-String targetNo3 = "";                 // e.g. 002
+int targetNo = DEFAULT_TARGET_NO;
+String targetId = "";
+String targetNo3 = "";
 String deviceName = "";
 
 // Scenario state
@@ -106,7 +102,7 @@ String msg = "";
 String pendingScenarioId = "";
 String lastStartedScenarioId = "";
 int pendingPosition = 0;
-int currentPosition = 1;
+int currentPosition = 2;
 bool inGame = false;
 
 // Optional response messages. Keep false for 100-node demos to avoid RF collisions.
@@ -153,6 +149,7 @@ String getField(String data, char separator, int index) {
       strIndex[1] = (i == maxIndex) ? i + 1 : i;
     }
   }
+
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
@@ -164,10 +161,13 @@ void updateTargetStrings() {
 void saveTargetNo(int number) {
   if (number < 0) number = 0;
   if (number > 250) number = 250;
+
   EEPROM.write(addr, number);
   EEPROM.commit();
+
   targetNo = number;
   updateTargetStrings();
+
   Serial.println("Saved targetNo: " + String(targetNo));
 }
 
@@ -179,21 +179,27 @@ void loadTargetNo() {
   }
 
   int saved = EEPROM.read(addr);
+
   if (saved == 255 || saved < 0 || saved > 250) {
     saveTargetNo(DEFAULT_TARGET_NO);
   } else {
     targetNo = saved;
     updateTargetStrings();
   }
+
   Serial.println("Target: " + targetId);
 }
 
 int angleForPosition(int pos) {
   switch (pos) {
-    case 1: return SERVO_FRONT;
-    case 2: return SERVO_SIDE;
-    case 3: return SERVO_BACK;
-    default: return SERVO_FRONT;
+    case 1:
+      return SERVO_FRONT;
+    case 2:
+      return SERVO_SIDE;
+    case 3:
+      return SERVO_BACK;
+    default:
+      return SERVO_SIDE;
   }
 }
 
@@ -201,6 +207,7 @@ void moveToPosition(int pos) {
   if (pos < 1 || pos > 3) return;
 
   int angle = angleForPosition(pos);
+
   Serial.println("Move " + targetId + " to P" + String(pos) + " angle=" + String(angle));
 
   targetServo.write(angle);
@@ -212,18 +219,19 @@ void sendData(String data) {
   if (data.length() == 0) return;
 
   int state = radio.transmit(data);
+
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println("Giden ==> " + data);
   } else {
     Serial.print(F("TX failed, code "));
     Serial.println(state);
   }
+
   delay(30);
   radio.startReceive();
 }
 
 void sendHit() {
-  // Include target ID, because bulk scenarios can activate multiple targets.
   // Example: PZ;H002
   sendData("PZ;" + targetId);
 }
@@ -237,6 +245,7 @@ void prepareScenario(String scenarioId, int pos) {
 
   pendingScenarioId = scenarioId;
   pendingPosition = pos;
+
   Serial.println("Prepared " + targetId + " " + scenarioId + " P" + String(pos));
 
   if (SEND_ACK) {
@@ -250,6 +259,7 @@ void startScenario(String scenarioId) {
     // GO can be repeated for reliability; start only once per scenario ID.
     if (lastStartedScenarioId != scenarioId) {
       lastStartedScenarioId = scenarioId;
+
       moveToPosition(pendingPosition);
 
       if (SEND_DONE) {
@@ -262,21 +272,29 @@ void startScenario(String scenarioId) {
 
 bool isForMe(String target) {
   target.trim();
+
   if (target == "ALL") return true;
   if (target == targetId) return true;
+
   // Also accept H2 style for small manual tests.
   if (target == "H" + String(targetNo)) return true;
+
   return false;
 }
 
 void processBulk(String packet) {
-  // Format: B;S001;R001;N020;D:11111222223333300000;Cxx
+  // Format:
+  // B;S001;R001;N020;D:11111222223333300000
+
   String scenarioId = getField(packet, ';', 1);
   String rField = getField(packet, ';', 2);
   String nField = getField(packet, ';', 3);
   String dField = getField(packet, ';', 4);
 
-  if (!scenarioId.startsWith("S") || !rField.startsWith("R") || !nField.startsWith("N") || !dField.startsWith("D:")) {
+  if (!scenarioId.startsWith("S") ||
+      !rField.startsWith("R") ||
+      !nField.startsWith("N") ||
+      !dField.startsWith("D:")) {
     Serial.println("Invalid bulk packet");
     return;
   }
@@ -290,11 +308,13 @@ void processBulk(String packet) {
   }
 
   int index = targetNo - startNo;
+
   if (index < 0 || index >= data.length()) {
     return;
   }
 
   char posChar = data.charAt(index);
+
   if (posChar == '0') {
     pendingScenarioId = "";
     pendingPosition = 0;
@@ -309,11 +329,14 @@ void processBulk(String packet) {
 
 void processDirectMove(String packet) {
   // Format: M;H002;P3 or M;ALL;P1
+
   String target = getField(packet, ';', 1);
   String pField = getField(packet, ';', 2);
+
   if (!pField.startsWith("P")) return;
 
   int pos = pField.substring(1).toInt();
+
   if (isForMe(target)) {
     moveToPosition(pos);
   }
@@ -321,7 +344,9 @@ void processDirectMove(String packet) {
 
 void processShortMove(String packet) {
   // Format: H002P3 or H2P3 or ALLP1
+
   int pIndex = packet.indexOf('P');
+
   if (pIndex < 0) return;
 
   String target = packet.substring(0, pIndex);
@@ -334,6 +359,7 @@ void processShortMove(String packet) {
 
 void processMessage(String packet) {
   packet.trim();
+
   if (packet.length() == 0) return;
 
   Serial.println("Gelen ==> " + packet);
@@ -356,6 +382,10 @@ void processMessage(String packet) {
   if (packet == "stp" || packet == "STOP" || packet == "STOP;ALL") {
     pendingScenarioId = "";
     pendingPosition = 0;
+
+    // Stop geldiğinde pasif konuma dön.
+    moveToPosition(2);
+
     digitalWrite(buzzer, LOW);
     return;
   }
@@ -389,6 +419,7 @@ void readData() {
   msg = "";
 
   int state = radio.readData(msg);
+
   if (state == RADIOLIB_ERR_NONE) {
     processMessage(msg);
   } else {
@@ -402,7 +433,7 @@ void readData() {
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
-  };
+  }
 
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
@@ -412,18 +443,23 @@ class MyServerCallbacks : public BLEServerCallbacks {
 class MyCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic) {
     std::string value = pCharacteristic->getValue();
+
     if (value.length() > 0) {
       String incoming = "";
+
       for (int i = 0; i < value.length(); i++) {
         incoming += value[i];
       }
 
       int newTargetNo = incoming.toInt();
+
       saveTargetNo(newTargetNo);
 
       String returnText = "OK;" + targetId;
+
       pCharacteristic->setValue(returnText.c_str());
       pCharacteristic->notify();
+
       millisSendOk = millis() + 2500;
     }
   }
@@ -433,14 +469,16 @@ class MyCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
-
 void servoTestLoop() {
   if (millis() - lastServoTestMs >= SERVO_TEST_INTERVAL_MS) {
     int angle = SERVO_TEST_ANGLES[servoTestIndex];
+
     Serial.println("SERVO TEST angle=" + String(angle));
+
     targetServo.write(angle);
 
     servoTestIndex++;
+
     if (servoTestIndex >= SERVO_TEST_COUNT) {
       servoTestIndex = 0;
     }
@@ -457,16 +495,21 @@ void setupBle() {
   }
 
   BLEDevice::init(deviceName.c_str());
+
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
   BLEService* pService = pServer->createService(SERVICE_UUID);
+
   BLE2902* p2902Descriptor = new BLE2902();
   p2902Descriptor->setNotifications(true);
 
   pCharacteristic = pService->createCharacteristic(
     CHARACTERISTIC_UUID,
-    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE
+    BLECharacteristic::PROPERTY_READ |
+      BLECharacteristic::PROPERTY_WRITE |
+      BLECharacteristic::PROPERTY_NOTIFY |
+      BLECharacteristic::PROPERTY_INDICATE
   );
 
   pCharacteristic->addDescriptor(new BLE2902());
@@ -476,9 +519,11 @@ void setupBle() {
   pService->start();
 
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
+
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);
+
   BLEDevice::startAdvertising();
 }
 
@@ -488,10 +533,12 @@ void setup() {
 
   pinMode(piezoPin, INPUT);
   pinMode(buzzer, OUTPUT);
+
   if (USE_STATUS_RGB_LEDS) {
     pinMode(kirmizi, OUTPUT);
     pinMode(mavi, OUTPUT);
     pinMode(yesil, OUTPUT);
+
     digitalWrite(kirmizi, HIGH);
     digitalWrite(mavi, HIGH);
     digitalWrite(yesil, HIGH);
@@ -501,8 +548,13 @@ void setup() {
 
   targetServo.setPeriodHertz(50);
   targetServo.attach(servoPin, 500, 2500);
-  targetServo.write(SERVO_TEST_ANGLES[0]);
-  currentPosition = 1;
+
+  // KRİTİK DÜZELTME:
+  // Açılışta fiziksel olarak P2 / pasif konuma git.
+  // Eski hatalı satır:
+  // targetServo.write(SERVO_TEST_ANGLES[0]);  // Bu P1'e götürüyordu.
+  targetServo.write(SERVO_SIDE);
+  currentPosition = 2;
   lastServoMoveMs = millis();
 
   if (SERVO_TEST_MODE) {
@@ -513,6 +565,7 @@ void setup() {
   }
 
   SPI.begin(LoRa_SCK, LoRa_MISO, LoRa_MOSI, LoRa_nss);
+
   radio.setSpreadingFactor(10);
   radio.setPreambleLength(8);
   radio.setFrequency(433.5);
@@ -521,36 +574,51 @@ void setup() {
   radio.setCRC(true);
 
   Serial.print(F("[SX1262] Initializing ... "));
+
   int state = radio.begin();
+
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true) { delay(1000); }
+
+    while (true) {
+      delay(1000);
+    }
   }
 
   radio.setPacketReceivedAction(setFlag);
 
   if (!EEPROM.begin(EEPROM_SIZE)) {
     Serial.println("failed to initialise EEPROM");
-    while (true) { delay(1000); }
+
+    while (true) {
+      delay(1000);
+    }
   }
 
   loadTargetNo();
   setupBle();
 
-  // Optional boot indicator. Disabled by default because RGB pins are not used in this version.
   if (USE_STATUS_RGB_LEDS) {
-    digitalWrite(kirmizi, LOW); delay(200); digitalWrite(kirmizi, HIGH);
-    digitalWrite(mavi, LOW); delay(200); digitalWrite(mavi, HIGH);
-    digitalWrite(yesil, LOW); delay(200); digitalWrite(yesil, HIGH);
+    digitalWrite(kirmizi, LOW);
+    delay(200);
+    digitalWrite(kirmizi, HIGH);
+
+    digitalWrite(mavi, LOW);
+    delay(200);
+    digitalWrite(mavi, HIGH);
+
+    digitalWrite(yesil, LOW);
+    delay(200);
+    digitalWrite(yesil, HIGH);
   }
 
-  // Announce node online
   sendData("HELLO;" + targetId);
 
   radio.startReceive();
+
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1);
 }
 
@@ -571,7 +639,9 @@ void loop() {
   if (piezoSpike && afterServoSafe && hitCooldownSafe) {
     Serial.println("PZ;" + targetId);
     sendHit();
+
     lastHitMs = millis();
+
     delay(70);
   }
 
@@ -582,6 +652,7 @@ void loop() {
       if (millisSendOk != 0 && millis() > millisSendOk) {
         ESP.restart();
       }
+
       if (USE_STATUS_RGB_LEDS) {
         digitalWrite(yesil, LOW);
         digitalWrite(kirmizi, HIGH);

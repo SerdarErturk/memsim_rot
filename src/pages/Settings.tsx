@@ -84,58 +84,7 @@ function Settings() {
 
           </View>
         </View>
-        <View style={{ flex: 3, paddingTop: hp(5), paddingBottom: hp(5),flexDirection:"row" }}>
-          <View style={{ flexDirection: "row" }}>
-            <View style={{ padding: wp(5) }} >
-              <TouchableOpacity style={[styles.btn, styles.shadow]} onPress={() => { navigation.navigate("sensors" as never) }} >
-                <FastImage
-                  style={{ width: hp(80), height: hp(80) }}
-                  source={require('../images/sensor.png')}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-                <Text style={styles.btnsubtext}>
-               
-                  {L("setting.sensor",locale)}
-                </Text>
-
-              </TouchableOpacity>
-            </View>
-
-          </View>
-          <View style={{ flexDirection: "row" }}>
-          <View style={{ padding: wp(5) }} >
-              <TouchableOpacity style={[styles.btn, styles.shadow]} onPress={() => { navigation.navigate("scoreSetting" as never) }} >
-                <FastImage
-                  style={{ width: hp(80), height: hp(80) }}
-                  source={require('../images/score.png')}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-                <Text style={styles.btnsubtext}>
-                  
-                {L("setting.score",locale)}
-                </Text>
-
-              </TouchableOpacity>
-            </View>
-
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <View style={{ padding: wp(5) }} >
-              <TouchableOpacity style={[styles.btn, styles.shadow]} onPress={() => { navigation.navigate("shottimesetting" as never) }} >
-                <FastImage
-                  style={{ width: hp(80), height: hp(80) }}
-                  source={require('../images/goal.png')}
-                  resizeMode={FastImage.resizeMode.contain}
-                />
-                <Text style={styles.btnsubtext}>
-                {L("setting.timing",locale)}
-                </Text>
-
-              </TouchableOpacity>
-            </View>
-
-          </View>
-        </View>
+       
 
       </View>
     </SafeAreaView>

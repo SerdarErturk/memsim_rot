@@ -1,0 +1,155 @@
+[
+    {
+        "field": "firstName",
+        "text": "İsim",
+        "type": "input",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "lastName",
+        "text": "Soyisim",
+        "type": "input",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "tcNumber",
+        "text": "TC Kimlik Numarası",
+        "type": "input",
+        "mask": "99999999999",
+        "keyboardType": "numeric",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    
+    {
+        "field": "phoneNumber",
+        "text": "Telefon Numarası",
+        "type": "input",
+        "mask": "(599) 999 99 99",
+        "keyboardType": "numeric",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "email",
+        "text": "E-Mail",
+        "type": "input",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            },
+            {
+                "type": "emailAddress",
+                "message": "general.valid_email",
+                "parameters": {
+                    "ErrorMessage": "general.valid_email",
+                    "DataType": "EmailAddress",
+                    "CustomDataType": null,
+                    "DisplayFormat": null,
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.EmailAddressAttribute"
+                }
+            }
+        ]
+    },{
+        "field": "userPassword",
+        "text": "Şifre",
+        "type": "input",
+        "secureText": true,
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "userPasswordAgain",
+        "text": "Şifre(Tekrar)",
+        "type": "input",
+        "secureText": true,
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,32 @@
+{
+  "presets": [
+    "module:metro-react-native-babel-preset"
+  ],
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "root": [
+          "./src"
+        ],
+        "alias": [
+          {"components": "./src/components" }  ,
+          {"services":  "./src/services/httpService"}
+       
+        ],
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    ],
+    [
+      "react-native-reanimated/plugin",
+      {
+        "globals": ["__scanCodes"]
+      }
+    ]
+  ]
+}

@@ -1,0 +1,14 @@
+.\gradlew app:assembleRelease -x bundleReleaseJsAndAssets
+./gradlew bundleRelease
+./gradlew assembleRelease
+./gradlew app:assembleRelease
+./gradlew clean
+react-native start --reset-cache
+RMDIR /Q/S node_modules
+adb logcat AndroidRuntime:E *:Scd..
+DEL /F/Q/S "node_modules" ,
+RMDIR /Q/S node_modules
+
+adb shell input keyevent 82 debug mode açma
+
+adb logcat AndroidRuntime:E *:S

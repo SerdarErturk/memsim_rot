@@ -1,0 +1,80 @@
+{
+  "SelectboxData": {
+    "name": "SelectboxData",
+    "properties": {
+      "endpoint": "text",
+      "value": "text",
+      "title": "text",
+      "other": "text"
+    }
+  },
+  "ErrorLog": {
+    "name": "ErrorLog",
+    "properties": {
+      "deviceInfo": "text",
+      "error": "text"
+    }
+  },
+  "Sensors": {
+    "name": "Sensors",
+    "properties": {
+      "score": "text",
+      "name": "text",
+      "displayName": "text",
+      "maxDarbe": "int",
+      "minDarbe": "int",
+      "color": "string",
+      "type": "int",
+      "field": "string"
+    }
+  },
+  "Targets": {
+    "name": "Targets",
+    "properties": {
+      "field": "text",
+      "name": "text",
+      "maxDarbe": "int",
+      "minDarbe": "int",
+      "status": "int"
+    }
+  },
+  "Scenarios": {
+    "name": "Scenarios",
+    "properties": {
+      "name": "text",
+      "description": "text",
+      "hedefSure": "float",
+      "doubletapSure": "float",
+      "rehineSure": "float",
+      "doubletapGecerli": "float",
+      "targets": "text"
+    }
+  },
+  "Puan": {
+    "name": "Puan",
+    "properties": {
+      "rehineCeza": "int",
+      "sureCeza": "int",
+      "rehineVurulmadiPuan": "int"
+     
+    }
+  },
+  "Time": {
+    "name": "Time",
+    "properties": {
+      "hedefSure": "float",
+      "doubletapSure": "float",
+      "rehineSure": "float",
+      "doubletapGecerli": "float"
+     
+    }
+  },
+  "Log": {
+    "name": "Log",
+    "properties": {
+      "date": "string",
+      "text": "string"
+     
+    }
+  }
+}

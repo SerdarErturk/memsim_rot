@@ -1,0 +1,62 @@
+[
+    {
+        "field": "atisTarihi",
+        "text": "Atış Tarihi",
+        "type": "datePicker",
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "skor",
+        "text": "Skor",
+        "type": "input",
+        "edit": true,
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    },
+    {
+        "field": "nabiz",
+        "text": "Nabız",
+        "type": "input",
+        "edit": true,
+        "validations": [
+            {
+                "type": "required",
+                "message": "general.required",
+                "parameters": {
+                    "ErrorMessage": "general.required",
+                    "AllowEmptyStrings": "False",
+                    "RequiresValidationContext": "False",
+                    "ErrorMessageResourceName": null,
+                    "ErrorMessageResourceType": null,
+                    "TypeId": "System.ComponentModel.DataAnnotations.RequiredAttribute"
+                }
+            }
+        ]
+    }
+    
+]

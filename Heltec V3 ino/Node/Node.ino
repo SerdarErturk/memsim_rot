@@ -74,7 +74,7 @@ const int SERVO_BACK  = 170;
 // =========================
 // true  = LoRa/BLE is bypassed. Servo rotates every SERVO_TEST_INTERVAL_MS.
 // false = normal node mode.
-const bool SERVO_TEST_MODE = true;
+const bool SERVO_TEST_MODE = false;
 const unsigned long SERVO_TEST_INTERVAL_MS = 2000;
 const int SERVO_TEST_ANGLES[] = { SERVO_FRONT, SERVO_SIDE, SERVO_BACK };
 const int SERVO_TEST_COUNT = sizeof(SERVO_TEST_ANGLES) / sizeof(SERVO_TEST_ANGLES[0]);

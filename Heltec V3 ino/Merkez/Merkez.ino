@@ -27,9 +27,11 @@
 #include <BLE2902.h>
 
 #define buzzer 19
+
 #define LoRa_MOSI 10
 #define LoRa_MISO 11
 #define LoRa_SCK 9
+
 #define LoRa_nss 8
 #define LoRa_dio1 14
 #define LoRa_nrst 12
@@ -38,6 +40,7 @@
 // =========================
 // PROTOCOL / TEST SETTINGS
 // =========================
+
 // false = send exactly M;..., B;..., GO;... for new rotary node.
 // true  = old light-target behavior, prepend '*'. Do NOT use true for rotary node unless node code strips '*'.
 const bool ADD_LEGACY_STAR_PREFIX = false;
@@ -54,14 +57,14 @@ const int CENTRAL_TEST_TYPE = 2;
 
 const unsigned long TEST_INTERVAL_MS = 2000;
 const int TEST_TARGET_NO = 1;
-const int TEST_POSITIONS[] = {1, 2, 3};
+const int TEST_POSITIONS[] = { 1, 2, 3 };
 const int TEST_POSITION_COUNT = sizeof(TEST_POSITIONS) / sizeof(TEST_POSITIONS[0]);
 
 int testPositionIndex = 0;
 int testScenarioCounter = 1;
 unsigned long lastTestMs = 0;
 
-// When true, GO is repeated to reduce packet-loss risk.
+// When true, GO is repeated to reduce packet-loss risk in test mode.
 const bool REPEAT_GO_FOR_TEST = true;
 const int GO_REPEAT_COUNT = 3;
 const int GO_REPEAT_DELAY_MS = 60;
@@ -81,9 +84,10 @@ SX1262 radio = new Module(LoRa_nss, LoRa_dio1, LoRa_nrst, LoRa_busy);
 // BLE
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
+
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-String nodemessage = "";
+
 String lastsend = "";
 
 #define SERVICE_UUID "d564ac02-e906-4b14-88ad-ca841372a59f"
@@ -100,28 +104,38 @@ String scenarioId(int scenarioNo) {
 }
 
 void sendData(String data);
+void readData();
+void setupLoRa();
+void setupBle();
+void runCentralTestMode();
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
+    Serial.println("BLE client connected.");
   }
 
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
+    Serial.println("BLE client disconnected.");
   }
 };
 
 class MyCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic) {
     std::string value = pCharacteristic->getValue();
+
     if (value.length() > 0) {
       String incoming = "";
+
       for (int i = 0; i < value.length(); i++) {
         incoming += value[i];
       }
 
       incoming.trim();
+
       Serial.println("BLE message => " + incoming);
+
       sendData(incoming);
     }
   }
@@ -143,17 +157,21 @@ void setupLoRa() {
   radio.setPacketReceivedAction(setFlag);
 
   Serial.print(F("[SX1262] Initializing ... "));
+
   int state = radio.begin();
+
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+
     while (true) {
       delay(1000);
     }
   }
 
+  receivedFlag = false;
   radio.startReceive();
 }
 
@@ -164,20 +182,17 @@ void setupBle() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   BLEService* pService = pServer->createService(SERVICE_UUID);
-  BLE2902* p2902Descriptor = new BLE2902();
-  p2902Descriptor->setNotifications(true);
 
   pCharacteristic = pService->createCharacteristic(
     CHARACTERISTIC_UUID,
     BLECharacteristic::PROPERTY_READ |
-    BLECharacteristic::PROPERTY_WRITE |
-    BLECharacteristic::PROPERTY_NOTIFY |
-    BLECharacteristic::PROPERTY_INDICATE
+      BLECharacteristic::PROPERTY_WRITE |
+      BLECharacteristic::PROPERTY_NOTIFY |
+      BLECharacteristic::PROPERTY_INDICATE
   );
 
   pCharacteristic->addDescriptor(new BLE2902());
   pCharacteristic->setCallbacks(new MyCallbacks());
-  pCharacteristic->addDescriptor(p2902Descriptor);
 
   pService->start();
 
@@ -185,6 +200,7 @@ void setupBle() {
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);
+
   BLEDevice::startAdvertising();
 
   Serial.println("BLE ready. Waiting for client...");
@@ -201,11 +217,12 @@ void setup() {
   setupBle();
 
   Serial.println("Central ready.");
+  Serial.println("ADD_LEGACY_STAR_PREFIX: " + String(ADD_LEGACY_STAR_PREFIX ? "true" : "false"));
+  Serial.println("CENTRAL_TEST_MODE: " + String(CENTRAL_TEST_MODE ? "true" : "false"));
 
   if (CENTRAL_TEST_MODE) {
     Serial.println("CENTRAL TEST MODE ACTIVE");
     Serial.println("Test type: " + String(CENTRAL_TEST_TYPE));
-    Serial.println("ADD_LEGACY_STAR_PREFIX: " + String(ADD_LEGACY_STAR_PREFIX ? "true" : "false"));
   }
 }
 
@@ -213,6 +230,7 @@ void loop() {
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
     data.trim();
+
     if (data.length() > 0) {
       sendData(data);
     }
@@ -239,17 +257,25 @@ void readData() {
   if (!receivedFlag) return;
 
   receivedFlag = false;
+
   String message = "";
   int state = radio.readData(message);
 
   if (state == RADIOLIB_ERR_NONE) {
+    message.trim();
+
     Serial.println("LoRa RX => " + message);
 
     // Forward node messages to BLE client if connected.
-    // New node sends examples: PZ;H001, ACK;S001;H001, DONE;S001;H001;P1, HELLO;H001
+    // New node sends examples:
+    // PZ;H001
+    // ACK;S001;H001
+    // DONE;S001;H001;P1
+    // HELLO;H001
     if (deviceConnected && message.length() > 0 && message != lastsend) {
       pCharacteristic->setValue(message.c_str());
       pCharacteristic->notify();
+
       delay(3);
     }
   } else {
@@ -257,22 +283,27 @@ void readData() {
     Serial.println(state);
   }
 
+  receivedFlag = false;
   radio.startReceive();
 }
 
 void sendData(String data) {
   data.trim();
+
   if (data.length() == 0) return;
 
   String packet = data;
+
   if (ADD_LEGACY_STAR_PREFIX && !packet.startsWith("*")) {
     packet = "*" + packet;
   }
 
   Serial.println("LoRa TX => " + packet);
+
   lastsend = packet;
 
   int state = radio.transmit(packet);
+
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("TX success"));
   } else if (state == RADIOLIB_ERR_PACKET_TOO_LONG) {
@@ -285,17 +316,22 @@ void sendData(String data) {
   }
 
   radio.finishTransmit();
+
   delay(100);
-  radio.startReceive();
+
   receivedFlag = false;
+  radio.startReceive();
 }
 
 void runCentralTestMode() {
   if (millis() - lastTestMs < TEST_INTERVAL_MS) return;
+
   lastTestMs = millis();
 
   int pos = TEST_POSITIONS[testPositionIndex];
+
   testPositionIndex++;
+
   if (testPositionIndex >= TEST_POSITION_COUNT) {
     testPositionIndex = 0;
   }
@@ -304,7 +340,9 @@ void runCentralTestMode() {
     // Direct movement test for H001.
     // Node moves immediately after receiving this command.
     String cmd = "M;H" + pad3(TEST_TARGET_NO) + ";P" + String(pos);
+
     sendData(cmd);
+
     return;
   }
 
@@ -312,10 +350,21 @@ void runCentralTestMode() {
     // Bulk + GO test for one node.
     // Good for validating the final scenario protocol.
     String sid = scenarioId(testScenarioCounter++);
-    if (testScenarioCounter > 999) testScenarioCounter = 1;
 
-    String bulk = "B;" + sid + ";R" + pad3(TEST_TARGET_NO) + ";N001;D:" + String(pos);
+    if (testScenarioCounter > 999) {
+      testScenarioCounter = 1;
+    }
+
+    String bulk =
+      "B;" +
+      sid +
+      ";R" +
+      pad3(TEST_TARGET_NO) +
+      ";N001;D:" +
+      String(pos);
+
     sendData(bulk);
+
     delay(80);
 
     if (REPEAT_GO_FOR_TEST) {
@@ -326,22 +375,30 @@ void runCentralTestMode() {
     } else {
       sendData("GO;" + sid);
     }
+
     return;
   }
 
   if (CENTRAL_TEST_TYPE == 3) {
-    // 4-node demo sample. H001/H002/H003/H004 get different positions.
+    // 4-node demo sample.
+    // H001/H002/H003/H004 get different positions.
     // With only H001 connected, H001 reads the first char and moves accordingly.
     String sid = scenarioId(testScenarioCounter++);
-    if (testScenarioCounter > 999) testScenarioCounter = 1;
+
+    if (testScenarioCounter > 999) {
+      testScenarioCounter = 1;
+    }
 
     String d = "";
+
     if (pos == 1) d = "1231";
     if (pos == 2) d = "2312";
     if (pos == 3) d = "3123";
 
     String bulk = "B;" + sid + ";R001;N004;D:" + d;
+
     sendData(bulk);
+
     delay(80);
 
     if (REPEAT_GO_FOR_TEST) {
@@ -352,6 +409,7 @@ void runCentralTestMode() {
     } else {
       sendData("GO;" + sid);
     }
+
     return;
   }
 }

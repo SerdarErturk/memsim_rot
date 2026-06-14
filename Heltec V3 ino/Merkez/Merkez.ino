@@ -44,7 +44,7 @@ const bool ADD_LEGACY_STAR_PREFIX = false;
 
 // true  = central periodically sends test commands to H001.
 // false = normal BLE/Serial bridge only.
-const bool CENTRAL_TEST_MODE = true;
+const bool CENTRAL_TEST_MODE = false;
 
 // Test mode selector:
 // 1 = direct move test: M;H001;P1 -> P2 -> P3

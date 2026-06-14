@@ -95,7 +95,7 @@ const App: () => Node = () => {
         })
       })
 
-       //context.deleteTable(name);
+      //context.deleteTable(name);
       // if(name=="Time"){
       //   alert(name);
       //   context.deleteTable("Time");
@@ -191,20 +191,19 @@ const App: () => Node = () => {
     var targets = await getTargetsList();
 
     if (targets.length == 0) {
-
       for (let i = 0; i < 20; i++) {
-        var targetNumber = (i + 1).toString();
-        if (targetNumber.length == 1) {
-          targetNumber = "0" + targetNumber
-        }
-        var model = {
-          field: (i + 1) + "h",
+        const targetNo = i + 1;
+        const targetNumber = String(targetNo).padStart(3, "0");
+
+        const model = {
+          field: "H" + targetNumber,
           name: "H" + targetNumber,
           maxDarbe: "1500",
           minDarbe: "50",
           status: Status.ACTIVE
-        }
-        insertTargets(model)
+        };
+
+        insertTargets(model);
       }
 
 

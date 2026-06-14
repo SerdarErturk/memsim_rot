@@ -134,33 +134,43 @@ function PlayScenario(props: any) {
     analyzeBlData(data);
   };
 
-  const writeMessage = async (message: any, deviceId: any) => {
-    if (!deviceId) {
-      return;
-    }
+const writeMessage = async (message: any, deviceId: any) => {
+  if (!deviceId) {
+    return;
+  }
 
-    try {
-      console.log('Giden=>>> ' + message);
+  try {
+    /**
+     * KRİTİK:
+     * BLE uzun mesajları parçalayabilir.
+     * Merkez ESP, '\n' karakterini görünce mesajı tamamlandı kabul edecek.
+     */
+    const packet = String(message).endsWith('\n')
+      ? String(message)
+      : String(message) + '\n';
 
-      const data = stringToBytes(message);
+    // Logda \n görünsün diye JSON.stringify kullanıyoruz.
+    console.log('Giden=>>> ' + JSON.stringify(packet));
 
-      await BleManager.write(
-        deviceId,
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        data,
-      );
-    } catch (error) {
-      console.log('BLE write error:', error);
+    const data = stringToBytes(packet);
 
-      showMessage({
-        message: 'Komut gönderilemedi.',
-        type: 'danger',
-        position: 'top',
-        duration: 4000,
-      });
-    }
-  };
+    await BleManager.write(
+      deviceId,
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID,
+      data,
+    );
+  } catch (error) {
+    console.log('BLE write error:', error);
+
+    showMessage({
+      message: 'Komut gönderilemedi.',
+      type: 'danger',
+      position: 'top',
+      duration: 4000,
+    });
+  }
+};
 
   const delay = (milliseconds: any) => {
     return new Promise((resolve: any) => {
